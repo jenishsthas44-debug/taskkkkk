@@ -1,0 +1,112 @@
+CREATE DATABASE ContactBook;
+USE ContactBook;
+
+-- Create Contacts Table
+CREATE TABLE Contacts (
+    contact_id INT PRIMARY KEY AUTO_INCREMENT,
+    customer_name VARCHAR(100),
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    city VARCHAR(50)
+);
+
+-- 1. Stored Procedure to Add Contact
+DELIMITER $$
+
+CREATE PROCEDURE add_contact(
+    IN p_name VARCHAR(100),
+    IN p_phone VARCHAR(20),
+    IN p_email VARCHAR(100),
+    IN p_city VARCHAR(50)
+)
+BEGIN
+    IF p_name = '' OR p_phone = '' THEN
+        SELECT 'Error: Name and Phone cannot be empty' AS Message;
+    ELSE
+        INSERT INTO Contacts(customer_name, phone, email, city)
+        VALUES(p_name, p_phone, p_email, p_city);
+
+        SELECT LAST_INSERT_ID() AS contact_id,
+               'Contact added successfully' AS Message;
+    END IF;
+END $$
+
+DELIMITER ;
+
+-- 2. Stored Procedure to Search Contact
+DELIMITER $$
+
+CREATE PROCEDURE search_contact(
+    IN p_search_name VARCHAR(100)
+)
+BEGIN
+    SELECT *
+    FROM Contacts
+    WHERE customer_name LIKE CONCAT('%', p_search_name, '%');
+END $$
+
+DELIMITER ;
+
+-- 3. Stored Procedure to Update Phone Number
+DELIMITER $$
+
+CREATE PROCEDURE update_phone(
+    IN p_contact_id INT,
+    IN p_new_phone VARCHAR(20)
+)
+BEGIN
+    IF EXISTS (
+        SELECT * FROM Contacts
+        WHERE contact_id = p_contact_id
+    ) THEN
+
+        UPDATE Contacts
+        SET phone = p_new_phone
+        WHERE contact_id = p_contact_id;
+
+        SELECT 'Phone number updated successfully' AS Message;
+
+    ELSE
+        SELECT 'Error: Contact not found' AS Message;
+    END IF;
+END $$
+
+DELIMITER ;
+
+-- 4. Stored Procedure to Delete Contact
+DELIMITER $$
+
+CREATE PROCEDURE delete_contact(
+    IN p_contact_id INT
+)
+BEGIN
+    IF EXISTS (
+        SELECT * FROM Contacts
+        WHERE contact_id = p_contact_id
+    ) THEN
+
+        DELETE FROM Contacts
+        WHERE contact_id = p_contact_id;
+
+        SELECT 'Contact deleted successfully' AS Message;
+
+    ELSE
+        SELECT 'Error: Contact not found' AS Message;
+    END IF;
+END $$
+
+DELIMITER ;
+
+-- Example Calls
+
+CALL add_contact('Ram Sharma', '9811111111', 'ram@gmail.com', 'Kathmandu');
+
+CALL add_contact('Ramesh Karki', '9822222222', 'ramesh@gmail.com', 'Pokhara');
+
+CALL add_contact('Bikram Thapa', '9833333333', 'bikram@gmail.com', 'Lalitpur');
+
+CALL search_contact('ram');
+
+CALL update_phone(1, '9800000000');
+
+CALL delete_contact(2);
